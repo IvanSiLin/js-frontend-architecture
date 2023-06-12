@@ -11,14 +11,25 @@ export default async function todo() {
   const input = document.querySelector('input[name="name"]');
   const ul = document.getElementById('tasks');
 
+
   function addTask(task) {
 
     const li = document.createElement('li');
     li.classList.add('list-group-item');
     li.textContent = task.name;
-    ul.prepend(li);
-  }
+  
+    const existingTasks = Array.from(ul.children);
+    const indexToInsert = existingTasks.findIndex((existingTask) => existingTask.textContent > task.name);
+  
+    if (indexToInsert === -1) {
 
+      ul.appendChild(li);
+    } else {
+
+      ul.insertBefore(li, existingTasks[indexToInsert]);
+    }
+  }
+  
   async function loadTasks() {
 
     try {
@@ -50,7 +61,7 @@ export default async function todo() {
       }
 
     } catch (error) {
-      
+
       console.error('Error adding task:', error);
     }
   }
