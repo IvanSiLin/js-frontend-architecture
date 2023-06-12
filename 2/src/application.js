@@ -12,6 +12,7 @@ export default async function todo() {
   const ul = document.getElementById('tasks');
 
   function addTask(task) {
+
     const li = document.createElement('li');
     li.classList.add('list-group-item');
     li.textContent = task.name;
@@ -49,6 +50,7 @@ export default async function todo() {
       }
 
     } catch (error) {
+      
       console.error('Error adding task:', error);
     }
   }
