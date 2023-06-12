@@ -41,98 +41,91 @@ const validate = (fields) => {
 };
 
 // BEGIN
-const handleProcessState = (elements, processState) => {
+const updateProcessState = (elements, processState) => {
 
-  const { container, submitButton } = elements;
   switch (processState) {
 
     case 'sent':
-      container.innerHTML = 'User Created!';
+      elements.container.innerHTML = 'User Created!';
       break;
 
     case 'error':
-      submitButton.disabled = false;
+      elements.submitButton.disabled = false;
       break;
 
     case 'sending':
-      submitButton.disabled = true;
+      elements.submitButton.disabled = true;
       break;
 
     case 'filling':
-      submitButton.disabled = false;
+      elements.submitButton.disabled = false;
       break;
 
     default:
+      
       throw new Error(`Unknown process state: ${processState}`);
-
   }
 };
 
-const handleProcessError = () => {
 
-  // здесь происходит вывод сообщения о сетевой ошибке
-};
+const renderErrors = (elements, errors, previousErrors) => {
 
-const renderErrors = (elements, errors, prevErrors) => {
+  Object.entries(elements.fields).forEach(([fieldName, fieldElement]) => {
 
-  const { fields } = elements;
-  Object.entries(fields).forEach(([fieldName, fieldElement]) => {
+    const err = errors[fieldName];
+    
+    const fieldHadError = has(previousErrors, fieldName);
+    const currentFieldHasError = has(errors, fieldName);
 
-    const error = errors[fieldName];
-    const fieldHadError = has(prevErrors, fieldName);
-    const fieldHasError = has(errors, fieldName);
-
-    if (!fieldHadError && !fieldHasError) {
+    if (!fieldHadError && !currentFieldHasError) {
 
       return;
     }
 
-    if (fieldHadError && !fieldHasError) {
+    if (fieldHadError && !currentFieldHasError) {
 
       fieldElement.classList.remove('is-invalid');
       fieldElement.nextElementSibling.remove();
       return;
     }
 
-    if (fieldHadError && fieldHasError) {
+    if (fieldHadError && currentFieldHasError) {
 
       const feedbackElement = fieldElement.nextElementSibling;
-      feedbackElement.textContent = error.message;
+      feedbackElement.textContent = err.message;
       return;
     }
 
     fieldElement.classList.add('is-invalid');
     const feedbackElement = document.createElement('div');
     feedbackElement.classList.add('invalid-feedback');
-    feedbackElement.textContent = error.message;
+    feedbackElement.textContent = err.message;
     fieldElement.after(feedbackElement);
   });
 };
 
-const render = (elements) => (path, value, prevValue) => {
+const render = (formElements) => (path, inputValue, prevValue) => {
 
   switch (path) {
 
     case 'form.processState':
-      handleProcessState(elements, value);
+      updateProcessState(formElements, inputValue);
       break;
 
     case 'form.processError':
-      handleProcessError();
+      handleFormError();
       break;
 
-    case 'form.isValid':
-      elements.submitButton.disabled = !value;
+    case 'form.valid':
+      formElements.submitButton.disabled = !inputValue;
       break;
 
     case 'form.errors':
-      renderErrors(elements, value, prevValue);
+      renderErrors(formElements, inputValue, prevValue);
       break;
 
     default:
       break;
-
-
   }
 };
 
@@ -151,26 +144,24 @@ export default () => {
     },
     submitButton: document.querySelector('input[type="submit"]'),
   };
+ 
+  const state = onChange({
 
-  const state = onChange(
-    {
+    form: {
 
-      form: {
+      valid: true,
+      processState: 'filling',
+      processError: null,
+      errors: {},
+      fields: {
 
-        isValid: true,
-        processState: 'filling',
-        processError: null,
-        errors: {},
-        fields: {
-          name: '',
-          email: '',
-          password: '',
-          passwordConfirmation: '',
-        },
+        name: '',
+        email: '',
+        password: '',
+        passwordConfirmation: '',
       },
     },
-    render(elements)
-  );
+  }, render(elements));
 
   Object.entries(elements.fields).forEach(([fieldName, fieldElement]) => {
 
@@ -180,7 +171,7 @@ export default () => {
       state.form.fields[fieldName] = value;
       const errors = validate(state.form.fields);
       state.form.errors = errors;
-      state.form.isValid = isEmpty(errors);
+      state.form.valid = isEmpty(errors);
     });
   });
 
@@ -203,14 +194,11 @@ export default () => {
       await axios.post(routes.usersPath(), data);
       state.form.processState = 'sent';
     } catch (err) {
-
-      state.form.processState = 'error';
+  
+      state.form.processState = 'error crash';
       state.form.processError = errorMessages.network.error;
       throw err;
     }
-
-
   });
 };
-
 // END
