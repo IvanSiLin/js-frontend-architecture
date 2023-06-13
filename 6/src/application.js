@@ -47,19 +47,19 @@ const updateProcessState = (elements, processState) => {
 
     case 'sent':
       elements.container.innerHTML = 'User Created!';
-      break;
+      return;
 
     case 'error':
       elements.submitButton.disabled = false;
-      break;
+      return;
 
     case 'sending':
       elements.submitButton.disabled = true;
-      break;
+      return;
 
     case 'filling':
       elements.submitButton.disabled = false;
-      break;
+      return;
 
     default:
       
@@ -110,22 +110,22 @@ const render = (formElements) => (path, inputValue, prevValue) => {
 
     case 'form.processState':
       updateProcessState(formElements, inputValue);
-      break;
+      return;
 
     case 'form.processError':
       handleFormError();
-      break;
+      return;
 
     case 'form.valid':
       formElements.submitButton.disabled = !inputValue;
-      break;
+      return;
 
     case 'form.errors':
       renderErrors(formElements, inputValue, prevValue);
-      break;
+      return;
 
     default:
-      break;
+      return;
   }
 };
 
